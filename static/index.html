@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>MADDI HOME</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <style>
+   
+/* ====== RESET & BASE ====== */
+* { box-sizing: border-box; }
+html, body {
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* No scroll global por defecto (PC) */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #f0f2f5;
+  color: #333;
+}
+:root {
+  --primario: #1f1f1f;
+  --primario-hover: #343434;
+  --acento: #c9b28c;
+  --borde: #e4e0d8;
+  --bg: #ffffff;
+  --danger: #b00020;
+  --gris: #7a7a7a;
+  --sombra: 0 2px 8px rgba(0,0,0,0.08);
+  --radio: 8px;
+  --touch: 40px;
+}
+
+/* ====== LAYOUT ====== */
+header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--borde);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  position: sticky; top: 0; z-index: 100;
+}
+header h1 { font-size: 20px; margin: 0; font-weight: 700; color: var(--primario); letter-spacing: 0.5px; }
+.logo { height: 36px; opacity: 0.95; object-fit: contain; }
+main {
+  height: calc(100dvh - 60px);
+  display: grid;
+  grid-template-columns: 1fr 400px; /* Carrito fijo de 400px en PC */
+  gap: 20px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ====== ESTILOS GENERALES DE PANELES ====== */
+.panel, .carrito {
+  background: var(--bg);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  box-shadow: var(--sombra);
+}
+
+/* ====== TABS ====== */
+.tabs { display: flex; gap: 10px; border-bottom: 1px solid var(--borde); padding-bottom: 10px; margin-bottom: 5px; }
+.tabs button {
+  padding: 8px 16px;
+  height: auto;
+  min-height: 36px;
+  border-radius: var(--radio);
+  border: 1px solid transparent;
+  background: transparent;
+  font-weight: 600;
+  color: var(--gris);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tabs button:hover { background: #f8f9fa; color: #000; }
+.tabs button.active {
+  background: #efe9dc;
+  color: var(--primario);
+  border-color: var(--borde);
+}
+
+/* ====== CÁMARA ====== */
+#camara { display: none; gap: 16px; align-items: center; justify-content: center; height: 100%; }
+#camara.active { display: flex; flex-direction: column; }
+.video-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 640px; /* Limitar ancho en PC */
+  aspect-ratio: 16/9; /* Formato panorámico en PC */
+  background: #000;
+  border-radius: var(--radio);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+video { width: 100%; height: 100%; object-fit: cover; }
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2px dashed rgba(255,255,255,0.6);
+  border-radius: var(--radio);
+  margin: 20px;
+}
+.cam-controls { display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 640px; }
+.cam-controls button {
+  flex: 1;
+  height: 44px;
+  border-radius: var(--radio);
+  border: 1px solid var(--borde);
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cam-controls button:hover { background: #f8f9fa; }
+.cam-controls button.btn-primary { background: var(--primario); color: #fff; border: none; }
+.cam-controls button.btn-primary:hover { background: var(--primario-hover); }
+
+.detected {
+  background: #d1e7dd;
+  border: 1px solid #badbcc;
+  color: #0f5132;
+  padding: 15px;
+  border-radius: var(--radio);
+  font-size: 15px;
+  width: 100%;
+  max-width: 640px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* ====== BÚSQUEDA ====== */
+#busqueda.active { display: flex; }
+#busqueda { display: none; flex-direction: column; gap: 16px; height: 100%; }
+.buscador { display: flex; gap: 10px; }
+.buscador input {
+  flex: 1;
+  height: 44px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 0 16px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.buscador input:focus { border-color: var(--primario); box-shadow: 0 0 0 3px rgba(13,110,253,0.15); }
+.resultados {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Grid responsivo */
+  align-content: start;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 12px;
+  background: #f2efe7;
+}
+.item {
+  display: flex;
+  flex-direction: column; /* Tarjetas verticales */
+  justify-content: space-between;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.item:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.08); border-color: #ced4da; }
+.item .nombre { font-weight: 600; font-size: 15px; line-height: 1.3; }
+.item .precio { color: var(--primario); font-weight: 700; font-size: 16px; }
+.item .btn { width: 100%; margin-top: auto; }
+
+/* ====== TAB ACTUALIZAR ====== */
+#actualizar { display: none; flex-direction: column; gap: 16px; align-items: center; justify-content: center; height: 100%; }
+#actualizar .buscador { max-width: 500px; width: 100%; flex-direction: column; }
+#actualizar input[type="file"] { padding: 10px; background: #fff; height: auto; }
+
+/* ====== CARRITO ====== */
+.carrito h2 { font-size: 18px; margin: 0 0 5px 0; font-weight: 700; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+.carrito-lista {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: #fff;
+  padding: 0;
+}
+.cart-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #f0f2f5;
+  padding: 10px 12px;
+  transition: background 0.1s;
+}
+.cart-row:hover { background: #fcfcfc; }
+.cart-row:last-child { border-bottom: none; }
+.cart-row .nombre { font-size: 14px; font-weight: 500; }
+.cart-row .precio { font-size: 14px; font-weight: 600; white-space: nowrap; }
+
+.qty-controls { display: flex; align-items: center; gap: 4px; }
+.qty-btn, .remove-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid var(--borde);
+  background: #fff;
+  transition: all 0.2s;
+}
+.qty-btn:hover { background: #e9ecef; }
+.remove-btn { color: var(--danger); border-color: #f5c2c7; background: #fff; }
+.remove-btn:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+.qty-value { min-width: 24px; font-size: 14px; }
+
+  .totales, .pago {
+    border-top: 1px solid var(--borde);
+    padding-top: 15px;
+    gap: 12px;
+  }
+  .pago-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .totales div, .pago div { font-size: 15px; }
+  select, input[type="number"] {
+    height: 38px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 0 10px;
+    font-size: 14px;
+    background-color: #fff;
+  }
+.total-final { font-size: 22px; color: var(--primario); }
+
+.btn {
+  height: 38px;
+  border-radius: var(--radio);
+  border: 1px solid var(--borde);
+  background: #fff;
+  padding: 0 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary { background: var(--primario); color: #fff; border-color: var(--primario); }
+.btn-primary:hover { background: var(--primario-hover); border-color: var(--primario-hover); }
+
+/* ====== RESPONSIVE (MÓVIL) ====== */
+@media (max-width: 800px) {
+  html, body { 
+    overflow: hidden;
+    height: 100dvh;
+  }
+  main {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 60px);
+    min-height: 0;
+    gap: 10px;
+    padding: 10px;
+    overflow: hidden;
+  }
+  
+  /* Ocultar pestaña Actualizar en móvil para ahorrar espacio */
+  #tab-actualizar { display: none; }
+  
+  .panel, .carrito { 
+    padding: 10px; 
+    box-shadow: none; 
+    border-radius: 8px;
+    border: 1px solid var(--borde);
+  }
+
+  /* PANEL SUPERIOR (Cámara/Búsqueda): ocupa el espacio restante (aprox 45%) */
+  #panel-consulta {
+    flex: 1.2;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+   /* Tabs compactos */
+  .tabs button { flex: 1; height: 38px; padding: 0; font-size: 14px; }
+  .logo { height: 28px; opacity: 0.95; }
+   
+   /* Cámara ajustada */
+   #camara { height: 100%; justify-content: start; overflow-y: auto; }
+   .video-wrap { aspect-ratio: unset; height: auto; flex: 1; min-height: 0; background: #000; }
+   video { object-fit: cover; } /* Cover para llenar mejor el espacio reducido */
+  .cam-controls { margin-top: auto; padding-top: 8px; }
+  .cam-controls button { height: 36px; font-size: 14px; } /* Controles más compactos */
+  
+  /* Buscador ajustado */
+  #busqueda { height: 100%; overflow: hidden; }
+  .resultados { 
+    grid-template-columns: 1fr; 
+    overflow-y: auto;
+    border: 1px dashed var(--borde); 
+    padding: 8px;
+    flex: 1; /* Ocupa todo el espacio disponible en el panel */
+  }
+  .detected { font-size: 13px; padding: 10px; }
+  .item { flex-direction: row; align-items: center; box-shadow: none; padding: 8px; }
+  .item .btn { width: auto; margin: 0; padding: 0 12px; height: 32px; font-size: 13px; }
+  .item .nombre { font-size: 14px; }
+  .item .precio { font-size: 15px; }
+
+  /* PANEL INFERIOR (Carrito): ocupa el resto del alto con scroll interno */
+  #panel-carrito { 
+    flex: 0.8; 
+    min-height: 0; 
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column;
+  }
+  .carrito h2 { font-size: 16px; margin-bottom: 8px; padding-bottom: 5px; }
+  
+  .carrito-lista {
+    overflow-y: auto;
+    flex: 1; /* Crece para llenar el espacio del carrito */
+    max-height: none; /* Quitar límite anterior */
+    border: 1px dashed var(--borde);
+  }
+
+  .cart-row {
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--borde);
+  }
+  .cart-row .nombre { grid-column: 1 / span 3; font-size: 13px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cart-row .precio { font-size: 14px; }
+  
+  .qty-btn, .remove-btn { width: 32px; height: 32px; font-size: 16px; }
+  
+  .totales, .pago { padding-top: 6px; gap: 3px; }
+  .totales div, .pago div { font-size: 13px; }
+  .pago-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+  .pago-row label { display: none; } /* Ahorrar espacio */
+  select, input[type="number"] { height: 30px; font-size: 13px; width: 100px; }
+  .total-final { font-size: 18px; }
+  
+  /* Mostrar total en cabecera móvil y ocultar abajo */
+  #mobile-total-wrapper { display: inline-block !important; }
+  .row-total-bottom { display: none !important; }
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MADDI HOME</h1>
+    <img src="/static/logo.jpg" alt="MADDI Home" class="logo" />
+  </header>
+
+  <main>
+    <!-- PANEL IZQUIERDO: CÁMARA / BÚSQUEDA -->
+    <section class="panel" id="panel-consulta">
+      <div class="tabs">
+        <button id="tab-camara" class="active">Cámara</button>
+        <button id="tab-busqueda">Descripción</button>
+        <button id="tab-actualizar">Actualizar precios</button>
+      </div>
+
+      <!-- CÁMARA -->
+      <div id="camara" class="active">
+        <div class="video-wrap">
+          <video id="video" playsinline></video>
+          <div class="overlay"></div>
+        </div>
+        <div class="cam-controls">
+          <button id="btn-iniciar" class="btn-primary">Iniciar cámara</button>
+          <button id="btn-detener" class="btn">Detener</button>
+          <button id="btn-linterna" class="btn">Linterna</button>
+        </div>
+        <div id="detected" class="detected" style="display:none;"></div>
+      </div>
+
+      <!-- BÚSQUEDA POR DESCRIPCIÓN -->
+      <div id="busqueda">
+        <div class="buscador">
+          <input id="q" type="text" placeholder="Buscar por nombre…" inputmode="search" />
+          <button id="btn-limpiar" class="btn">Limpiar</button>
+        </div>
+        <div id="resultados" class="resultados"></div>
+      </div>
+
+      <div id="actualizar" style="display:none;">
+        <div class="buscador">
+          <input id="excel-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+          <button id="btn-upload" class="btn btn-primary">Subir Excel</button>
+        </div>
+        <div id="upload-status" class="detected" style="display:none;"></div>
+      </div>
+    </section>
+
+    <!-- PANEL DERECHO: CARRITO -->
+    <section class="carrito" id="panel-carrito">
+      <h2 style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Carrito</span>
+        <span id="mobile-total-wrapper" style="display:none; color:var(--primario); font-size:1.1em;"></span>
+      </h2>
+      <div id="carrito-lista" class="carrito-lista"></div>
+
+      <div class="totales">
+        <div><strong>Subtotal:</strong></div>
+        <div id="subtotal" style="text-align:right;">$ 0,00</div>
+      </div>
+
+      <div class="pago">
+        <div class="pago-row">
+          <label for="medio">Medio de pago</label>
+          <select id="medio">
+            <option value="efectivo">Efectivo</option>
+            <option value="debito">Débito</option>
+            <option value="credito">Crédito</option>
+          </select>
+        </div>
+        <div class="pago-row">
+          <label for="ajuste">Ajuste %</label>
+          <input id="ajuste" type="number" step="0.01" value="0" placeholder="%" />
+        </div>
+
+        <div class="pago-row row-total-bottom" style="grid-column: 1 / -1; justify-content: space-between;">
+          <div><strong>Total ajustado:</strong></div>
+          <div id="total-final" class="total-final">$ 0,00</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Cuadro de debug -->
+  <div id="debug-box"></div>
+
+  <script>
+  // ====== CONFIGURACIÓN ======
+  const SHEETS_API_URL = '/productos'; // endpoint local Flask
+  const MONEDA = 'ARS';
+  const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: MONEDA, minimumFractionDigits: 2 });
+
+  // ====== ESTADO ======
+  let productos = []; // {Codigo, Nombre, Precio:number|string}
+  const porCodigo = new Map(); // codigo -> producto
+  const carrito = new Map();   // codigo -> {Codigo, Nombre, Precio, qty}
+
+  // Cámara
+  let stream = null, video = null, detector = null, scanning = false, torchOn = false;
+
+  // ====== UTILIDADES ======
+  function normalizarTexto(s) {
+    return String(s || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+  // Parser robusto: miles + decimal
+  function parseCurrencyToNumber(s) {
+    if (typeof s === 'number') return s;
+    if (s == null) return 0;
+    let t = String(s).replace(/\s+/g, '').replace(/[A-Za-z$]/g, '');
+    const hasComma = t.includes(',');
+    const hasDot   = t.includes('.');
+    if (hasComma && hasDot) {
+      const lastComma = t.lastIndexOf(',');
+      const lastDot   = t.lastIndexOf('.');
+      if (lastDot > lastComma) t = t.replace(/,/g, '');      // '.' decimal, ',' miles
+      else { t = t.replace(/\./g, ''); t = t.replace(/,/g, '.'); } // ',' decimal
+    } else if (hasComma) { t = t.replace(/\./g, ''); t = t.replace(/,/g, '.'); }
+    else if (hasDot) { t = t.replace(/,/g, ''); }
+    const n = parseFloat(t);
+    return Number.isFinite(n) ? n : 0;
+  }
+  function precioFmt(n) { return fmt.format(n || 0); }
+
+  function logUI(msg) {
+    console.debug(msg);
+    const box = document.getElementById('debug-box');
+    box.style.display = 'block';
+    box.textContent = String(msg);
+    clearTimeout(logUI._t);
+    logUI._t = setTimeout(() => { box.style.display = 'none'; }, 5000);
+  }
+
+  // ====== CARGA DE PRODUCTOS ======
+  async function cargarProductos() {
+    try {
+      const r = await fetch(SHEETS_API_URL, { cache: 'no-store' });
+      const json = await r.json();
+      const items = (json.items || []).map(x => ({
+        Codigo: String(x.Codigo || '').trim(),
+        Nombre: String(x.Nombre || '').trim(),
+        Precio: parseCurrencyToNumber(x.Precio)
+      }));
+      productos = items.filter(p => p.Codigo && p.Nombre);
+      porCodigo.clear();
+      for (const p of productos) porCodigo.set(String(p.Codigo).trim(), p);
+      console.debug('Productos cargados:', productos.slice(0, 5));
+      renderResultados([]);
+    } catch (err) {
+      console.error('Error cargando productos:', err);
+      alert('No se pudieron cargar los productos. Revisa el backend local.');
+    }
+  }
+
+  // ====== BÚSQUEDA POR NOMBRE ======
+  const inputQ = document.getElementById('q');
+  const resultadosDiv = document.getElementById('resultados');
+  let qTimer = null;
+
+  inputQ.addEventListener('input', () => {
+    if (qTimer) clearTimeout(qTimer);
+    qTimer = setTimeout(() => {
+      const q = normalizarTexto(inputQ.value);
+      if (!q) { renderResultados([]); return; }
+      const matches = productos.filter(p => normalizarTexto(p.Nombre).includes(q));
+      renderResultados(matches.slice(0, 50)); // límite visual
+    }, 150);
+  });
+  document.getElementById('btn-limpiar').addEventListener('click', () => {
+    inputQ.value = '';
+    renderResultados([]);
+  });
+
+  // Render de resultados: botón con data-codigo
+  function renderResultados(lista) {
+    resultadosDiv.innerHTML = '';
+    if (!lista || lista.length === 0) {
+      resultadosDiv.innerHTML = '<div style="color:var(--gris);text-align:center;">Sin resultados</div>';
+      return;
+    }
+    for (const p of lista) {
+      const codigoNorm = String(p.Codigo || '').trim();
+      const precioNum  = parseCurrencyToNumber(p.Precio);
+      const row = document.createElement('div');
+      row.className = 'item';
+      row.innerHTML = `
+        <div>
+          <div class="nombre">${p.Nombre}</div>
+          <div class="precio">${precioFmt(precioNum)}</div>
+        </div>
+        <button class="btn btn-primary" data-codigo="${codigoNorm}">Agregar</button>
+      `;
+      resultadosDiv.appendChild(row);
+    }
+  }
+
+  // Delegación de eventos: botón "Agregar" dentro de resultados
+  resultadosDiv.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('button.btn-primary');
+    if (!btn) return;
+
+    const codigo = (btn.dataset.codigo || '').trim();
+    const row    = btn.closest('.item');
+    const nombre = row?.querySelector('.nombre')?.textContent?.trim() || '';
+    const precioTxt = row?.querySelector('.precio')?.textContent || '';
+    const precioNum = parseCurrencyToNumber(precioTxt);
+
+    logUI(`Agregar click: código=${codigo} | nombre="${nombre}" | precio=${precioNum}`);
+
+    let p = porCodigo.get(codigo) || productos.find(x => String(x.Codigo).trim() === codigo);
+
+    if (!p) {
+      if (!codigo) { alert('Producto sin código. Revisá la planilla.'); return; }
+      if (!nombre) { alert('No se pudo leer el nombre del producto.'); return; }
+      p = { Codigo: codigo, Nombre: nombre, Precio: precioNum };
+      console.warn('Producto no estaba en porCodigo/productos. Usando fallback desde DOM:', p);
+    }
+
+    agregarAlCarrito(p, 1);
+  });
+
+  // ====== CÁMARA / BARCODE (Android) ======
+  const btnIniciar = document.getElementById('btn-iniciar');
+  const btnDetener = document.getElementById('btn-detener');
+  const btnLinterna = document.getElementById('btn-linterna');
+  const detectedDiv = document.getElementById('detected');
+
+  btnIniciar.addEventListener('click', iniciarCamara);
+  btnDetener.addEventListener('click', detenerCamara);
+  btnLinterna.addEventListener('click', toggleTorch);
+
+  async function iniciarCamara() {
+    try {
+      video = document.getElementById('video');
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      video.srcObject = stream; await video.play();
+      if ('BarcodeDetector' in window) {
+        const formats = ['ean_13', 'ean_8', 'code_128', 'upc_a', 'upc_e'];
+        detector = new BarcodeDetector({ formats });
+        scanning = true; loopDeteccion();
+      } else {
+        alert('Este navegador no soporta BarcodeDetector. Usá Chrome/Android o HTTPS con ngrok.');
+      }
+    } catch (err) {
+      console.error('Error al iniciar cámara:', err);
+      alert('No se pudo acceder a la cámara. Verifica permisos del navegador.');
+    }
+  }
+  async function loopDeteccion() {
+    if (!scanning || !detector) return;
+    try {
+      const barcodes = await detector.detect(video);
+      if (barcodes && barcodes.length > 0) {
+        const raw = barcodes[0].rawValue || '';
+        manejarCodigoDetectado(raw);
+      }
+    } catch (err) {}
+    requestAnimationFrame(loopDeteccion);
+  }
+  function manejarCodigoDetectado(codigoRaw) {
+    const codigo = String(codigoRaw).trim();
+    const p = porCodigo.get(codigo);
+    detectedDiv.style.display = 'block';
+    if (p) {
+      detectedDiv.innerHTML = `
+        <div><strong>Código:</strong> ${codigo}</div>
+        <div><strong>Producto:</strong> ${p.Nombre}</div>
+        <div><strong>Precio:</strong> ${precioFmt(parseCurrencyToNumber(p.Precio))}</div>
+        <div style="margin-top:8px;">
+          <button id="add-scan" class="btn btn-primary">Agregar al carrito</button>
+        </div>
+      `;
+      document.getElementById('add-scan').onclick = () => agregarAlCarrito(p, 1);
+    } else {
+      detectedDiv.innerHTML = `
+        <div><strong>Código:</strong> ${codigo}</div>
+        <div style="color:var(--danger);">Producto no encontrado en la planilla.</div>
+      `;
+    }
+  }
+  async function detenerCamara() {
+    scanning = false;
+    try {
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      if (detector && detector.reset) detector.reset();
+    } catch {}
+    detectedDiv.style.display = 'none';
+  }
+  async function toggleTorch() {
+    if (!stream) return;
+    const track = stream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+    if (!('torch' in capabilities)) { alert('La linterna no está soportada en este dispositivo/navegador.'); return; }
+    torchOn = !torchOn;
+    try { await track.applyConstraints({ advanced: [{ torch: torchOn }] }); }
+    catch (err) { console.warn('No se pudo alternar torch:', err); }
+  }
+
+  // ====== CARRITO ======
+  function agregarAlCarrito(itemOrCodigo, qty = 1) {
+    const p = (typeof itemOrCodigo === 'string')
+      ? porCodigo.get(String(itemOrCodigo).trim())
+      : itemOrCodigo;
+
+    if (!p || !p.Codigo) {
+      console.warn('Agregar: producto inválido:', itemOrCodigo);
+      alert('Producto no encontrado o sin código.');
+      return;
+    }
+
+    const key = String(p.Codigo).trim();
+    const precioNum = parseCurrencyToNumber(p.Precio);
+    const item = { ...p, Precio: precioNum };
+
+    const c = carrito.get(key) || { ...item, qty: 0 };
+    c.qty += qty;
+    if (c.qty < 1) c.qty = 1;
+
+    carrito.set(key, c);
+    logUI(`Agregado: ${c.Nombre} | x${c.qty} | ${precioFmt(c.Precio)}`);
+    renderCarrito();
+  }
+
+  function quitarDelCarrito(codigo) {
+    carrito.delete(String(codigo).trim());
+    renderCarrito();
+  }
+
+  function cambiarCantidad(codigo, delta) {
+    const key = String(codigo || '').trim();
+    const c = carrito.get(key);
+    if (!c) return;
+    c.qty = Math.max(1, (c.qty || 1) + delta);
+    carrito.set(key, c);
+    renderCarrito();
+  }
+
+  function calcularSubtotal() {
+    let total = 0;
+    for (const c of carrito.values()) total += (parseCurrencyToNumber(c.Precio) || 0) * c.qty;
+    return total;
+  }
+
+  function calcularTotalAjustado(subtotal) {
+    const pct = parseFloat(document.getElementById('ajuste').value || '0'); // fijo por medio
+    const factor = 1 + (pct / 100);
+    return subtotal * factor;
+  }
+
+  /* Render del carrito: botones − + × SIN data-action (usa clases) */
+  function renderCarrito() {
+    const cont = document.getElementById('carrito-lista');
+    cont.innerHTML = '';
+
+    for (const c of carrito.values()) {
+      const precioUnit = parseCurrencyToNumber(c.Precio);
+      const row = document.createElement('div');
+      row.className = 'cart-row';
+      row.dataset.codigo = String(c.Codigo || '').trim();
+      
+      row.innerHTML = `
+        <div class="nombre">${c.Nombre}</div>
+        <div class="precio">${precioFmt(precioUnit * c.qty)}</div>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="cambiarCantidad('${c.Codigo}', -1)">−</button>
+          <div class="qty-value">${c.qty}</div>
+          <button class="qty-btn" onclick="cambiarCantidad('${c.Codigo}', 1)">+</button>
+        </div>
+        <button class="remove-btn" onclick="quitarDelCarrito('${c.Codigo}')">×</button>
+      `;
+      cont.appendChild(row);
+    }
+
+    const sub = calcularSubtotal();
+    document.getElementById('subtotal').textContent = precioFmt(sub);
+    const tot = calcularTotalAjustado(sub);
+    const totFmt = precioFmt(tot);
+    document.getElementById('total-final').textContent = totFmt;
+    document.getElementById('mobile-total-wrapper').textContent = totFmt;
+  }
+
+  // Listeners de pago
+  document.getElementById('medio').addEventListener('change', (e) => {
+    const val = e.target.value;
+    const aj = document.getElementById('ajuste');
+    // Valores por defecto sugeridos (el usuario puede editar)
+    if (val === 'efectivo') aj.value = 0;
+    else if (val === 'debito') aj.value = 0;
+    else if (val === 'credito') aj.value = 10;
+    renderCarrito(); // Recalcular total
+  });
+  document.getElementById('ajuste').addEventListener('input', (e) => {
+    const medio = document.getElementById('medio').value;
+    let val = parseFloat(e.target.value);
+    
+    // Si es efectivo y el usuario escribe un positivo, lo hacemos negativo
+    if (medio === 'efectivo' && val > 0) {
+      e.target.value = -val;
+    }
+    renderCarrito();
+  });
+
+  // ====== UPLOAD EXCEL ======
+  const btnUpload = document.getElementById('btn-upload');
+  const fileInput = document.getElementById('excel-file');
+  const statusDiv = document.getElementById('upload-status');
+
+  btnUpload.addEventListener('click', async () => {
+    if (!fileInput.files.length) { alert('Seleccioná un archivo .xlsx'); return; }
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    statusDiv.style.display = 'block';
+    statusDiv.textContent = 'Subiendo y procesando...';
+    
+    try {
+      const res = await fetch('/upload-excel', { method: 'POST', body: formData });
+      const json = await res.json();
+      if (res.ok) {
+        statusDiv.textContent = `Éxito: ${json.importados} productos importados.`;
+        statusDiv.style.background = '#d1e7dd';
+        statusDiv.style.color = '#0f5132';
+        cargarProductos(); // Recargar en vivo
+      } else {
+        throw new Error(json.error || 'Error desconocido');
+      }
+    } catch (err) {
+      statusDiv.textContent = 'Error: ' + err.message;
+      statusDiv.style.background = '#f8d7da';
+      statusDiv.style.color = '#842029';
+    }
+  });
+
+  // ====== INICIO ======
+  // Tabs
+  document.getElementById('tab-camara').onclick = () => showTab('camara');
+  document.getElementById('tab-busqueda').onclick = () => showTab('busqueda');
+  document.getElementById('tab-actualizar').onclick = () => showTab('actualizar');
+
+  function showTab(id) {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+
+    ['camara','busqueda','actualizar'].forEach(x => {
+      const el = document.getElementById(x);
+      if (x === id) el.classList.add('active'), el.style.display = (id==='camara'||id==='busqueda')?'flex':'flex';
+      else el.classList.remove('active'), el.style.display = 'none';
+    });
+    
+    if (id !== 'camara' && scanning) detenerCamara();
+  }
+
+  // Cargar al inicio
+  cargarProductos();
+  </script>
+</body>
+</html>
