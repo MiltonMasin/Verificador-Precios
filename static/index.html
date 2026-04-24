@@ -133,8 +133,8 @@ video { width: 100%; height: 100%; object-fit: cover; }
   border-radius: var(--radio);
   font-size: 15px;
   width: 100%;
-  max-width: 640px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: none;
 }
 
 /* ====== BÚSQUEDA ====== */
@@ -271,59 +271,111 @@ video { width: 100%; height: 100%; object-fit: cover; }
     overflow: hidden;
   }
   
-  /* Ocultar pestaña Actualizar en móvil para ahorrar espacio */
-  #tab-actualizar { display: none; }
+  /* Ocultar pestañas y secciones innecesarias en móvil para limpieza absoluta */
+  .tabs { display: none !important; }
+  .pago { display: none !important; }
+  .totales { display: none !important; }
   
   .panel, .carrito { 
     padding: 10px; 
     box-shadow: none; 
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid var(--borde);
+    background: #fff;
   }
 
-  /* PANEL SUPERIOR (Cámara/Búsqueda): ocupa el espacio restante (aprox 45%) */
+  /* PANEL SUPERIOR (Lector): Tamaño fijo basado en contenido */
   #panel-consulta {
-    flex: 1.2;
+    flex: 0 0 auto; 
     min-height: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
   
-   /* Tabs compactos */
-  .tabs button { flex: 1; height: 38px; padding: 0; font-size: 14px; }
-  .logo { height: 28px; opacity: 0.95; }
-   
-   /* Cámara ajustada */
-   #camara { height: 100%; justify-content: start; overflow-y: auto; }
-   .video-wrap { aspect-ratio: unset; height: auto; flex: 1; min-height: 0; background: #000; }
-   video { object-fit: cover; } /* Cover para llenar mejor el espacio reducido */
-  .cam-controls { margin-top: auto; padding-top: 8px; }
-  .cam-controls button { height: 36px; font-size: 14px; } /* Controles más compactos */
+  .logo { height: 24px; }
   
-  /* Buscador ajustado */
-  #busqueda { height: 100%; overflow: hidden; }
-  .resultados { 
-    grid-template-columns: 1fr; 
-    overflow-y: auto;
-    border: 1px dashed var(--borde); 
-    padding: 8px;
-    flex: 1; /* Ocupa todo el espacio disponible en el panel */
+  /* Cámara con tamaño estable */
+  #camara { height: auto; display: flex; flex-direction: column; overflow: hidden; }
+  .video-wrap { 
+       border-radius: 12px;
+       width: 100%;
+       height: 18dvh;
+       flex: none;
+       min-height: 0;
+       background: #000; 
+       margin-bottom: 8px;
+       position: relative;
+       overflow: hidden;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       border: 2px solid #fff; /* Marco exterior sólido */
+       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+     }
+     video { 
+       width: 100%; 
+       height: 100%; 
+       object-fit: cover; 
+     }
+    .overlay {
+       position: absolute;
+       /* Ajustado para estar pegado a los bordes internos */
+       top: 4px;
+       left: 4px;
+       right: 4px;
+       bottom: 4px;
+       border: 1px dashed rgba(255, 255, 255, 0.5); /* La línea de puntos interna */
+       border-radius: 8px;
+       pointer-events: none;
+       z-index: 2;
+     }
+    /* Animación de escaneo emprolijada y centrada */
+    .overlay::after {
+      content: "";
+      position: absolute;
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 3px;
+      background: linear-gradient(to right, transparent, #ff0000, transparent);
+      box-shadow: 0 0 15px 2px rgba(255, 0, 0, 0.7);
+      animation: scan 2.5s ease-in-out infinite;
+      opacity: 0.8;
+    }
+    @keyframes scan {
+      0% { top: 5%; opacity: 0.4; }
+      50% { top: 95%; opacity: 1; }
+      100% { top: 5%; opacity: 0.4; }
+    }
+  .cam-controls { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 6px; 
+    padding-bottom: 4px;
   }
-  .detected { font-size: 13px; padding: 10px; }
-  .item { flex-direction: row; align-items: center; box-shadow: none; padding: 8px; }
-  .item .btn { width: auto; margin: 0; padding: 0 12px; height: 32px; font-size: 13px; }
-  .item .nombre { font-size: 14px; }
-  .item .precio { font-size: 15px; }
-
-  /* PANEL INFERIOR (Carrito): ocupa el resto del alto con scroll interno */
-  #panel-carrito { 
-    flex: 0.8; 
-    min-height: 0; 
-    overflow: hidden; 
-    display: flex; 
-    flex-direction: column;
-  }
+  .cam-controls button { height: 42px; font-size: 13px; font-weight: 700; border-radius: 10px; }
+  #btn-iniciar { grid-column: 1 / span 2; } /* Iniciar cámara es el principal */
+  
+  /* Bloque detectado general */
+   .detected { 
+     margin-top: 5px;
+     font-size: 13px; 
+     padding: 10px; 
+     border-radius: 10px;
+     background: #e9f5ef;
+     border: 1px solid #badbcc;
+     display: none;
+   }
+   
+   /* PANEL INFERIOR (Carrito): Amplio para ver el presupuesto */
+   #panel-carrito { 
+     flex: 1; /* Ahora el carrito es el que se adapta al espacio sobrante */
+     min-height: 0; 
+     overflow: hidden; 
+     display: flex; 
+     flex-direction: column;
+   }
   .carrito h2 { font-size: 16px; margin-bottom: 8px; padding-bottom: 5px; }
   
   .carrito-lista {
@@ -373,7 +425,6 @@ video { width: 100%; height: 100%; object-fit: cover; }
         <button id="tab-actualizar">Actualizar precios</button>
       </div>
 
-      <!-- CÁMARA -->
       <div id="camara" class="active">
         <div class="video-wrap">
           <video id="video" playsinline></video>
@@ -592,22 +643,61 @@ video { width: 100%; height: 100%; object-fit: cover; }
 
   async function iniciarCamara() {
     try {
+      // 1. Detener cualquier stream previo para liberar la cámara
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+
+      // 2. Verificar si el contexto es seguro (HTTPS o localhost)
+      if (!window.isSecureContext) {
+        alert("La cámara requiere una conexión segura (HTTPS o localhost). Verifica tu URL.");
+        return;
+      }
+
       video = document.getElementById('video');
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      
+      // 3. Intentar con configuración ideal
+      const constraints = {
+        video: { 
+          facingMode: { ideal: 'environment' }, 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 } 
+        },
         audio: false
-      });
-      video.srcObject = stream; await video.play();
+      };
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        console.warn("Fallo con resolución ideal, reintentando con básica...", err);
+        // 4. Fallback: configuración mínima si la ideal falla
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' }, 
+          audio: false 
+        });
+      }
+
+      video.srcObject = stream;
+      await video.play();
+
       if ('BarcodeDetector' in window) {
         const formats = ['ean_13', 'ean_8', 'code_128', 'upc_a', 'upc_e'];
         detector = new BarcodeDetector({ formats });
-        scanning = true; loopDeteccion();
+        scanning = true;
+        loopDeteccion();
       } else {
-        alert('Este navegador no soporta BarcodeDetector. Usá Chrome/Android o HTTPS con ngrok.');
+        alert('Este navegador no soporta BarcodeDetector. Usá Chrome en Android o HTTPS con ngrok.');
       }
     } catch (err) {
-      console.error('Error al iniciar cámara:', err);
-      alert('No se pudo acceder a la cámara. Verifica permisos del navegador.');
+      console.error('Error crítico al iniciar cámara:', err);
+      if (err.name === 'NotAllowedError') {
+        alert('Permiso denegado. Habilita el acceso a la cámara en la configuración del navegador.');
+      } else if (err.name === 'NotFoundError') {
+        alert('No se encontró ninguna cámara trasera en este dispositivo.');
+      } else {
+        alert('No se pudo acceder a la cámara: ' + err.message);
+      }
     }
   }
   async function loopDeteccion() {
